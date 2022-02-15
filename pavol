@@ -1,0 +1,96 @@
+#!/bin/sh
+
+main() {
+    parse_opts "$@"
+    if [ -n "$help" ]; then
+	help
+    elif [ -n "$input" ]; then
+	input
+    elif [ -n "$output" ]; then
+	output
+    elif [ -n "$1" ]; then
+	output
+    else
+	help
+    fi
+}
+
+input() {
+    if [ -n "$toggle_mute" ]; then
+        pactl set-source-mute 0 toggle
+    elif [ -n "$mute" ]; then
+        pactl set-source-mute 0 1
+    elif [ -n "$unmute" ]; then
+        pactl set-source-mute 0 0
+    elif [ -n "$volume" ]; then
+	pactl set-source-volume 0 "$number%"
+    fi
+}
+
+output() {
+    if [ -n "$toggle_mute" ]; then
+        pactl set-sink-mute 0 toggle
+    elif [ -n "$mute" ]; then
+        pactl set-sink-mute 0 1
+    elif [ -n "$unmute" ]; then
+        pactl set-sink-mute 0 0
+    elif [ -n "$volume" ]; then
+        pactl set-sink-volume 0 "$number%"
+    fi
+}
+
+help() {
+    echo "Usage:	pavol [options] [arguments]"
+    echo
+    echo "Options:"
+    echo " -i|--input	  │ Manage input"
+    echo " -o|--output	  │ Manage output"
+    echo " -v|--volume	  │ Manage volume"
+    echo "-mt|--toggle-mute │ Toggle mute on and off"
+    echo "-my|--mute  	  │ Enable mute"
+    echo "-mn|--unmute 	  │ Disable mute"
+    echo " -h|--help 	  │ Print this help message and exit"
+    echo
+}
+
+parse_opts() {
+    while [ $# -gt 0 ]; do
+        key="$1"
+        case $key in
+	-h|--help)
+	    help=1
+	    shift
+	    ;;
+	-i|--input)
+	    input=1
+	    shift
+	    ;;
+	-o|--output)
+	    output=1
+	    shift
+	    ;;
+        -mt|--toggle-mute)
+            toggle_mute=1
+            shift
+            ;;
+	-my|--mute)
+	    mute=1
+	    shift
+	    ;;
+	-mn|--unmute)
+	    unmute=1
+	    shift
+	    ;;
+        -v|--volume)
+	    volume=1
+	    number="$2"
+            shift 2
+            ;;
+        *)
+	    shift
+            ;;
+        esac
+    done
+}
+
+main "$@"
