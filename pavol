@@ -6,7 +6,7 @@ main() {
 	help
     elif [ -n "$input" ]; then
 	input
-    elif [ -n "$notify_sound" ]; then
+    elif [ -n "$notify" ]; then
 	output && sound
     elif [ -n "$output" ]; then
 	output
@@ -67,12 +67,8 @@ parse_opts() {
 	    hlp=1
 	    shift
 	    ;;
-	-ns|--notify-sound)
-	    notify_sound=1
-	    shift
-	    ;;
-	-ng|--notify-send)
-	    notify_send=1
+	-n|--notify)
+	    notify=1
 	    shift
 	    ;;
 	-i|--input)
