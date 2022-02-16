@@ -6,6 +6,8 @@ main() {
 	help
     elif [ -n "$input" ]; then
 	input
+    elif [ -n "$notify_sound" ]; then
+	output && sound
     elif [ -n "$output" ]; then
 	output
     elif [ -n "$1" ]; then
@@ -39,18 +41,22 @@ output() {
     fi
 }
 
+sound() {
+    pl /usr/share/sounds/deepin/stereo/audio-volume-change.wav
+}
+
 help() {
-    echo "Usage:	pavol [options] [arguments]"
-    echo
-    echo "Options:"
-    echo " -i|--input	  │ Manage input"
-    echo " -o|--output	  │ Manage output"
-    echo " -v|--volume	  │ Manage volume"
-    echo "-mt|--toggle-mute │ Toggle mute on and off"
-    echo "-my|--mute  	  │ Enable mute"
-    echo "-mn|--unmute 	  │ Disable mute"
-    echo " -h|--help 	  │ Print this help message and exit"
-    echo
+    echo "Usage:	pavol [options] [arguments]
+
+    Options:
+     -i|--input	  │ Manage input
+     -o|--output	  │ Manage output
+     -v|--volume	  │ Manage volume
+    -mt|--toggle-mute │ Toggle mute on and off
+    -my|--mute  	  │ Enable mute
+    -mn|--unmute 	  │ Disable mute
+     -h|--help 	  │ Print this help message and exit
+     "
 }
 
 parse_opts() {
@@ -58,7 +64,15 @@ parse_opts() {
         key="$1"
         case $key in
 	-h|--help)
-	    help=1
+	    hlp=1
+	    shift
+	    ;;
+	-ns|--notify-sound)
+	    notify_sound=1
+	    shift
+	    ;;
+	-ng|--notify-send)
+	    notify_send=1
 	    shift
 	    ;;
 	-i|--input)
