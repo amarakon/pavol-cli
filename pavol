@@ -64,7 +64,7 @@ parse_opts() {
         key="$1"
         case $key in
 	-h|--help)
-	    hlp=1
+	    help=1
 	    shift
 	    ;;
 	-n|--notify)
