@@ -46,17 +46,17 @@ sound() {
 }
 
 help() {
-    echo "Usage:	pavol [options] [arguments]
+    printf "Usage:	pavol [options] [arguments]
 
-    Options:
-     -i|--input	  │ Manage input
-     -o|--output	  │ Manage output
-     -v|--volume	  │ Manage volume
-    -mt|--toggle-mute │ Toggle mute on and off
-    -my|--mute  	  │ Enable mute
-    -mn|--unmute 	  │ Disable mute
-     -h|--help 	  │ Print this help message and exit
-     "
+Options:
+ -i|--input	  │ Manage input
+ -o|--output	  │ Manage output
+ -v|--volume	  │ Manage volume
+-mt|--toggle-mute │ Toggle mute on and off
+-my|--mute	  │ Enable mute
+-mn|--unmute      │ Disable mute
+ -h|--help	  │ Print this help message and exit
+\n"
 }
 
 parse_opts() {
