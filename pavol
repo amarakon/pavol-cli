@@ -31,7 +31,7 @@ input() {
 
 output() {
     if [ -n "$toggle_mute" ]; then
-        pactl set-sink-mute 0 toggle
+	pactl set-sink-mute 0 toggle && [ "$(pactl get-sink-mute 0 | cut -d ' ' -f 2)" = "no" ] && sound
     elif [ -n "$mute" ]; then
         pactl set-sink-mute 0 1
     elif [ -n "$unmute" ]; then
