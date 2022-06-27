@@ -46,7 +46,7 @@ sound() {
 }
 
 help() {
-    printf "Usage:	pavol [options] [arguments]
+    echo "Usage:	pavol [options] [arguments]
 
 Options:
  -i|--input	  │ Manage input
@@ -57,7 +57,7 @@ Options:
 -mn|--unmute      │ Disable mute
  -n|--notify      │ Make a notification sound
  -h|--help	  │ Print this help message and exit
-\n"
+"
 }
 
 parse_opts() {
