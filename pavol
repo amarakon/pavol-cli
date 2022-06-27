@@ -55,6 +55,7 @@ Options:
 -mt|--toggle-mute │ Toggle mute on and off
 -my|--mute	  │ Enable mute
 -mn|--unmute      │ Disable mute
+ -n|--notify      │ Make a notification sound
  -h|--help	  │ Print this help message and exit
 \n"
 }

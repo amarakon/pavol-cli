@@ -23,6 +23,8 @@ from the command-line.
     `# user` pavol -my|--mute # enable mute
     `# user` pavol -mn|--unmute # disable mute
 
+For more detfails, please run `` `# user` pavol --help ``.
+
 ## Dependencies
 
 1.  PulseAudio
