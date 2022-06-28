@@ -42,7 +42,13 @@ output() {
 }
 
 sound() {
-    pl /usr/share/sounds/deepin/stereo/audio-volume-change.wav
+    [ -z $PLAYER ] && PLAYER="mpv"
+    sound=/usr/share/sounds/deepin/stereo/audio-volume-change.wav
+    if [ -f $sound ]; then
+	setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
+    else
+	echo "Sound file not found"
+    fi
 }
 
 help() {
