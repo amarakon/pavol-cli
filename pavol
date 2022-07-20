@@ -66,8 +66,9 @@ parse_opts() {
 	    u | unmute)	unmute=1 ; shift ;;
 	    v | volume)
 		needs_arg
-		case $3 in ''|*[!0-9]*) ;; *) cut=1-3 shift=3 ;; esac
-		case $2 in ''|*[!0-9]*) ;; *) cut=1-2 shift=2 ;; esac
+		arg() { [ `echo $@ | cut -c 1` = + ] && echo $@ | cut -c 2- || echo $@; }
+		case `arg $3` in ''|*[!0-9]*) ;; *) cut=1-3 shift=3 ;; esac
+		case `arg $2` in ''|*[!0-9]*) ;; *) cut=1-2 shift=2 ;; esac
 		[ -z $cut ] && cut=1-2 ; [ -z $shift ] && shift=2
 		eval `echo "$@" | cut -d " " -f $cut |
 		    sed 's/--//g ; s/ volume/_volume/g ; s/-o\S/output_volume/g ; s/-i\S/input_volume/g ; s/-v\s/output_volume/ ; s/volume\s/volume/g ; s/volume/volume=/g ; s/volume==/volume=/g ; s/-o output_volume/output_volume/ ; s/-i output_volume/input_volume/'`
