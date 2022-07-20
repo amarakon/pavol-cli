@@ -5,22 +5,22 @@ main() { parse_opts "$@"
 
     [ -n "$input" ] && what=source put_volume=$input_volume base
     what=sink put_volume=$output_volume
-    { [ -n "$notify" -a ! -n "$no_notify" ] && base && sound; } ||
-    { [ -n "$output" -o -n "$output_volume" ] && base; }
+    if [ -n "$notify" -a ! -n "$no_notify" ];then base && sound
+    elif [ -n "$output" -o -n "$output_volume" ]; then base; fi
 }
 
 base() {
-    { [ -n "$toggle" ] && pactl set-$what-mute 0 toggle; } ||
-    { [ -n "$mute" ] && pactl set-$what-mute 0 1; } ||
-    { [ -n "$unmute" ] && pactl set-$what-mute 0 0; } ||
-    { [ -n "$put_volume" ] && pactl set-$what-volume 0 "$put_volume%"; }
+    if [ -n "$toggle" ]; then pactl set-$what-mute 0 toggle
+    elif [ -n "$mute" ]; then pactl set-$what-mute 0 1
+    elif [ -n "$unmute" ]; then pactl set-$what-mute 0 0
+    else [ -n "$put_volume" ]; then pactl set-$what-volume 0 "$put_volume%"; fi
 }
 
 sound() {
     [ -z $PLAYER ] && PLAYER="mpv"
     sound=/usr/share/sounds/deepin/stereo/audio-volume-change.wav
-    { [ -f $sound ] && setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null; } ||
-    { echo "Sound file not found"; }
+    if [ -f $sound ]; then setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
+    else echo "Sound file not found"; fi
 }
 
 help() { echo -n "Usage:	$(basename $0) [options] [arguments]
@@ -83,9 +83,9 @@ parse_opts() {
         case $@ in
             ''|*[!0-9]*) help ; exit 0 ;;
             *)
-        	{ [ -n "$input" ] && input_volume=$1; } ||
-        	{ [ -n "$output" ] && output_volume=$1; } ||
-        	{ output=1 output_volume=$1; }
+        	if [ -n "$input" ]; then input_volume=$1
+        	elif [ -n "$output" ]; then output_volume=$1
+		else output=1 output_volume=$1; fi
         	;;
         esac
     fi
