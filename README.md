@@ -1,4 +1,4 @@
-PAVol-Cli – PulseAudio Volume Command-Line
+PAvol-Cli – PulseAudio Volume Command-Line
 ================
 
 ## Contents
@@ -11,17 +11,23 @@ PAVol-Cli – PulseAudio Volume Command-Line
 -   [Uninstallation](#uninstallation)
     -   [Universal](#universal-1)
     -   [Gentoo](#gentoo-1)
+-   [Configuration](#configuration)
 
-PAVol-Cli is a simple command-line utility to control PulseAudio volume
+PAvol-Cli is a simple command-line utility to control PulseAudio volume
 from the command-line.
 
 ## Usage
 
-    `# user` pavol -i|--input # whether to use input or output volume, defaults to output volume
-    `# user` pavol -v|--volume <number> # set <number> as the volume
-    `# user` pavol -mt|--toggle-mute # toggle mute
-    `# user` pavol -my|--mute # enable mute
-    `# user` pavol -mn|--unmute # disable mute
+``` sh
+`# user` pavol +10 # Increase output volume by 10
+`# user` pavol -i -10 # Decrease input volume by 10
+`# user` pavol -n 50 # Set volume to 50 and play a notification sound
+`# user` pavol -iv 50 -ov 50 # Set both input and output volume to 50
+
+`# user` pavol -m # Mute the output sink
+`# user` pavol -u # Unmute the output sink
+`# user` pavol -it # Toggle mute the input source
+```
 
 For more detfails, please run `` `# user` pavol --help ``.
 
@@ -63,4 +69,18 @@ For more detfails, please run `` `# user` pavol --help ``.
 # Remove my overlay (optional)
 `# root` eselect-repository remove -f amarlay
 `# root` emerge --sync
+```
+
+## Configuration
+
+Configuring PAvol-Cli can be done by editing the configuration file
+(`~/.config/pavol/pavol.conf`):
+
+``` sh
+# Update [Mstatus](https://github.com/amarakon/mstatus)' volume modules
+status() { pkill -RTMIN "^mstatus$" & pkill -RTMIN+1 "^mstatus$"; }
+trap status EXIT
+
+# Always notify after changing output volume
+notify=true
 ```

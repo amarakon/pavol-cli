@@ -1,113 +1,93 @@
 #!/bin/sh
 
-main() {
-    parse_opts "$@"
-    if [ -n "$help" ]; then
-	help
-    elif [ -n "$input" ]; then
-	input
-    elif [ -n "$notify" ]; then
-	output && sound
-    elif [ -n "$output" ]; then
-	output
-    elif [ -n "$1" ]; then
-	output
-    else
-	help
-    fi
+main() { parse_opts "$@"
+    if [ $# -eq 0 ]; then help ; exit 0; fi
+
+    [ -n "$input" ] && what=source put_volume=$input_volume base
+    what=sink put_volume=$output_volume
+    { [ -n "$notify" -a ! -n "$no_notify" ] && base && sound; } ||
+    { [ -n "$output" -o -n "$output_volume" ] && base; }
 }
 
-input() {
-    if [ -n "$toggle_mute" ]; then
-        pactl set-source-mute 0 toggle
-    elif [ -n "$mute" ]; then
-        pactl set-source-mute 0 1
-    elif [ -n "$unmute" ]; then
-        pactl set-source-mute 0 0
-    elif [ -n "$volume" ]; then
-	pactl set-source-volume 0 "$number%"
-    fi
-}
-
-output() {
-    if [ -n "$toggle_mute" ]; then
-	pactl set-sink-mute 0 toggle && [ "$(pactl get-sink-mute 0 | cut -d ' ' -f 2)" = "no" ] && sound
-    elif [ -n "$mute" ]; then
-        pactl set-sink-mute 0 1
-    elif [ -n "$unmute" ]; then
-        pactl set-sink-mute 0 0
-    elif [ -n "$volume" ]; then
-        pactl set-sink-volume 0 "$number%"
-    fi
+base() {
+    { [ -n "$toggle" ] && pactl set-$what-mute 0 toggle; } ||
+    { [ -n "$mute" ] && pactl set-$what-mute 0 1; } ||
+    { [ -n "$unmute" ] && pactl set-$what-mute 0 0; } ||
+    { [ -n "$put_volume" ] && pactl set-$what-volume 0 "$put_volume%"; }
 }
 
 sound() {
     [ -z $PLAYER ] && PLAYER="mpv"
     sound=/usr/share/sounds/deepin/stereo/audio-volume-change.wav
-    if [ -f $sound ]; then
-	setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
-    else
-	echo "Sound file not found"
-    fi
+    { [ -f $sound ] && setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null; } ||
+    { echo "Sound file not found"; }
 }
 
-help() {
-    echo "Usage:	pavol [options] [arguments]
+help() { echo -n "Usage:	`basename $0` [options] [arguments]
 
 Options:
- -i|--input	  │ Manage input
- -o|--output	  │ Manage output
- -v|--volume	  │ Manage volume
--mt|--toggle-mute │ Toggle mute on and off
--my|--mute	  │ Enable mute
--mn|--unmute      │ Disable mute
- -n|--notify      │ Make a notification sound
- -h|--help	  │ Print this help message and exit
-"
-}
+-i|--input     │ Manage input
+-o|--output    │ Manage output
+               │
+-v|--volume    │ Change volume
+-m|--mute      │ Enable mute
+-u|--unmute    │ Disable mute
+-t|--toggle    │ Toggle mute on and off
+               │
+-n|--notify    │ Play a notification sound
+   --no-notify │ Do not notify (always overrides \`--notify\`)
+               │
+-h|--help      │ Print this help message and exit
+"; }
 
 parse_opts() {
-    while [ $# -gt 0 ]; do
-        key="$1"
-        case $key in
-	-h|--help)
-	    help=1
-	    shift
-	    ;;
-	-n|--notify)
-	    notify=1
-	    shift
-	    ;;
-	-i|--input)
-	    input=1
-	    shift
-	    ;;
-	-o|--output)
-	    output=1
-	    shift
-	    ;;
-        -mt|--toggle-mute)
-            toggle_mute=1
-            shift
-            ;;
-	-my|--mute)
-	    mute=1
-	    shift
-	    ;;
-	-mn|--unmute)
-	    unmute=1
-	    shift
-	    ;;
-        -v|--volume)
-	    volume=1
-	    number="$2"
-            shift 2
-            ;;
-        *)
-	    shift
-            ;;
-        esac
+    : "${config_dir:=${XDG_CONFIG_HOME:-$HOME/.config}/`basename $0`}"
+    : "${config_file:=$config_dir/`basename $0`.conf}"
+    [ -f "$config_file" ] && . "$config_file"
+
+    die() { echo "$*" >&2; exit 2; }  # complain to STDERR and exit with error
+    needs_arg() { [ -z "$OPTARG" ] && die "No arg for --$OPT option"; }
+
+    while getopts hniotmuv:-: OPT; do
+	# support long options: https://stackoverflow.com/a/28466267/519360
+	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+	    OPT="${OPTARG%%=*}"       # extract long option name
+	    OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
+	    OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+	fi
+	case "$OPT" in
+	    h | help)	help ; exit 0 ;;
+	    n | notify)	notify=1 ; shift ;;
+	    no-notify)	no_notify=1 ; shift ;;
+	    i | input)	input=1 type=input ;;
+	    o | output)	output=1 type=output ;;
+	    t | toggle)	toggle=1 ; shift ;;
+	    m | mute)	mute=1 ; shift ;;
+	    u | unmute)	unmute=1 ; shift ;;
+	    v | volume)
+		needs_arg
+		case $3 in ''|*[!0-9]*) ;; *) cut=1-3 shift=3 ;; esac
+		case $2 in ''|*[!0-9]*) ;; *) cut=1-2 shift=2 ;; esac
+		[ -z $cut ] && cut=1-2 ; [ -z $shift ] && shift=2
+		eval `echo "$@" | cut -d " " -f $cut |
+		    sed 's/--//g ; s/ volume/_volume/g ; s/-o\S/output_volume/g ; s/-i\S/input_volume/g ; s/-v\s/output_volume/ ; s/volume\s/volume/g ; s/volume/volume=/g ; s/volume==/volume=/g ; s/-o output_volume/output_volume/ ; s/-i output_volume/input_volume/'`
+		shift $shift ;;
+	    ??*)	die "Illegal option --$OPT" ;;  # bad long option
+	    ?)		exit 2 ;;  # bad short option (error reported via getopts)
+	esac
     done
+    shift $((OPTIND-1)) # remove parsed options and args from $@ list
+
+    if [ $# -ge 1 ]; then
+        case $@ in
+            ''|*[!0-9]*) help ; exit 0 ;;
+            *)
+        	{ [ -n "$input" ] && input_volume=$1; } ||
+        	{ [ -n "$output" ] && output_volume=$1; } ||
+        	{ output=1 output_volume=$1; }
+        	;;
+        esac
+    fi
 }
 
 main "$@"
