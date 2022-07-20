@@ -5,7 +5,7 @@ main() { parse_opts "$@"
 
     [ -n "$input" ] && what=source put_volume=$input_volume base
     what=sink put_volume=$output_volume
-    if [ -n "$notify" -a ! -n "$no_notify" ];then base && sound
+    if [ -n "$notify" -a ! -n "$no_notify" ]; then base && sound
     elif [ -n "$output" -o -n "$output_volume" ]; then base; fi
 }
 
