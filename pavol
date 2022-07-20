@@ -13,7 +13,7 @@ base() {
     if [ -n "$toggle" ]; then pactl set-$what-mute 0 toggle
     elif [ -n "$mute" ]; then pactl set-$what-mute 0 1
     elif [ -n "$unmute" ]; then pactl set-$what-mute 0 0
-    else [ -n "$put_volume" ]; then pactl set-$what-volume 0 "$put_volume%"; fi
+    elif [ -n "$put_volume" ]; then pactl set-$what-volume 0 "$put_volume%"; fi
 }
 
 sound() {
