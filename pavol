@@ -20,10 +20,10 @@ sound() {
     [ -z $PLAYER ] && PLAYER="mpv"
     sound=/usr/share/sounds/deepin/stereo/audio-volume-change.wav
     if [ -f $sound ]; then setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
-    else echo "Sound file not found"; fi
+    else printf "Sound file not found\n"; fi
 }
 
-help() { echo -n "Usage:	$(basename $0) [options] [arguments]
+help() { printf "Usage:	$(basename $0) [options] [arguments]
 
 Options:
 -i|--input     │ Manage input
@@ -45,7 +45,7 @@ parse_opts() {
     : "${config_file:=$config_dir/$(basename $0).conf}"
     [ -f "$config_file" ] && . "$config_file"
 
-    die() { echo "$*" >&2; exit 2; }  # complain to STDERR and exit with error
+    die() { printf "$*\n" >&2; exit 2; }  # complain to STDERR and exit with error
     needs_arg() { [ -z "$OPTARG" ] && die "No arg for --$OPT option"; }
 
     while getopts hniotmuv:-: OPT; do
