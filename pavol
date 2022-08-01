@@ -3,41 +3,43 @@
 main() { parse_opts "$@"
     if [ $# -eq 0 ]; then help ; exit 0; fi
 
-    [ -n "$input" ] && what=source put_volume=$input_volume base
-    what=sink put_volume=$output_volume
-    if [ -n "$notify" -a ! -n "$no_notify" ]; then base && sound
-    elif [ -n "$output" -o -n "$output_volume" ]; then base; fi
+    if [ -n "$input" ]; then what=source base
+    else
+	what=sink
+	if [ -n "$notify" -a ! -n "$no_notify" ]; then base && sound
+	elif [ -n "$output" -o -n "$output_volume" ]; then base; fi
+    fi
 }
 
 base() {
     if [ -n "$toggle" ]; then pactl set-$what-mute 0 toggle
     elif [ -n "$mute" ]; then pactl set-$what-mute 0 1
     elif [ -n "$unmute" ]; then pactl set-$what-mute 0 0
-    elif [ -n "$put_volume" ]; then pactl set-$what-volume 0 "$put_volume%"; fi
+    elif [ -n "$volume" ]; then pactl set-$what-volume 0 "$volume%"; fi
 }
 
 sound() {
     [ -z $PLAYER ] && PLAYER="mpv"
     sound=/usr/share/sounds/deepin/stereo/audio-volume-change.wav
     if [ -f $sound ]; then setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
-    else printf "Sound file not found\n"; fi
+    else printf '%s\n' "$(basename $0): sound file not found"; fi
 }
 
-help() { printf "Usage:	$(basename $0) [options] [arguments]
+help() { printf 'Usage:\t%s' "$(basename $0) [options] [arguments]
 
 Options:
--i|--input     │ Manage input
--o|--output    │ Manage output
-               │
--v|--volume    │ Change volume
--m|--mute      │ Enable mute
--u|--unmute    │ Disable mute
--t|--toggle    │ Toggle mute on and off
-               │
--n|--notify    │ Play a notification sound
-   --no-notify │ Do not notify (always overrides \`--notify\`)
-               │
--h|--help      │ Print this help message and exit
+-i|--input         │ Manage input
+-o|--output        │ Manage output
+                   │
+-v|--volume=VOLUME │ Change volume
+-m|--mute          │ Enable mute
+-u|--unmute        │ Disable mute
+-t|--toggle        │ Toggle mute on and off
+                   │
+-n|--notify        │ Play a notification sound
+   --no-notify     │ Do not notify (always overrides \`--notify\`)
+                   │
+-h|--help          │ Print this help message and exit
 "; }
 
 parse_opts() {
@@ -45,8 +47,12 @@ parse_opts() {
     : "${config_file:=$config_dir/$(basename $0).conf}"
     [ -f "$config_file" ] && . "$config_file"
 
-    die() { printf "$*\n" >&2; exit 2; }  # complain to STDERR and exit with error
-    needs_arg() { [ -z "$OPTARG" ] && die "No arg for --$OPT option"; }
+    needs_arg() {
+	if [ -z "$OPTARG" ];then
+	    printf '%s\n' "No arg for --$OPT option" >&2
+	    exit 2
+	fi
+    }
 
     while getopts hniotmuv:-: OPT; do
 	# support long options: https://stackoverflow.com/a/28466267/519360
@@ -56,38 +62,29 @@ parse_opts() {
 	    OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
 	fi
 	case "$OPT" in
-	    h | help)	help ; exit 0 ;;
-	    n | notify)	notify=1 ; shift ;;
-	    no-notify)	no_notify=1 ; shift ;;
-	    i | input)	input=1 type=input ;;
-	    o | output)	output=1 type=output ;;
-	    t | toggle)	toggle=1 ; shift ;;
-	    m | mute)	mute=1 ; shift ;;
-	    u | unmute)	unmute=1 ; shift ;;
-	    v | volume)
-		needs_arg
-		arg() { [ $(echo $@ | cut -c 1) = + ] && echo $@ | cut -c 2- || echo $@; }
-		case $(arg $3) in ''|*[!0-9]*) ;; *) cut=1-3 shift=3 ;; esac
-		case $(arg $2) in ''|*[!0-9]*) ;; *) cut=1-2 shift=2 ;; esac
-		[ -z $cut ] && cut=1-2 ; [ -z $shift ] && shift=2
-		eval $(echo "$@" | cut -d " " -f $cut |
-		    sed 's/--//g ; s/ volume/_volume/g ; s/-o\S/output_volume/g ; s/-i\S/input_volume/g ; s/-v\s/output_volume/ ; s/volume\s/volume/g ; s/volume/volume=/g ; s/volume==/volume=/g ; s/-o output_volume/output_volume/ ; s/-i output_volume/input_volume/')
-		shift $shift ;;
-	    ??*)	die "Illegal option --$OPT" ;;  # bad long option
-	    ?)		exit 2 ;;  # bad short option (error reported via getopts)
+	    h | help) help ; exit 0 ;;
+	    n | notify) notify=1 ;;
+	    no-notify) no_notify=1 ;;
+	    i | input) input=1 ;;
+	    o | output) output=1 ;;
+	    t | toggle) toggle=1 ;;
+	    m | mute) mute=1 ;;
+	    u | unmute) unmute=1 ; shift ;;
+	    v | volume) needs_arg ; volume=$OPTARG ;;
+	    ??*)
+		printf '%s\n' "Illegal option --$OPT" >&2
+		exit 2
+		;;
+	    ?) exit 2 ;;
 	esac
     done
     shift $((OPTIND-1)) # remove parsed options and args from $@ list
 
     if [ $# -ge 1 ]; then
-        case $@ in
-            ''|*[!0-9]*) help ; exit 0 ;;
-            *)
-        	if [ -n "$input" ]; then input_volume=$1
-        	elif [ -n "$output" ]; then output_volume=$1
-		else output=1 output_volume=$1; fi
-        	;;
-        esac
+	if [ $@ -eq $@ ] 2> /dev/null; then
+	    if [ -n "$output" -o -n "$input" ]; then volume=$1
+	    else output=1 volume=$1; fi
+	fi
     fi
 }
 
