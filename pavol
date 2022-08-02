@@ -1,28 +1,28 @@
 #!/bin/sh
 
 main() { parse_opts "$@"
-    if [ $# -eq 0 ]; then help ; exit 0; fi
+	if [ $# -eq 0 ]; then help ; exit 0; fi
 
-    if [ -n "$input" ]; then what=source base
-    else
-	what=sink
-	if [ -n "$notify" -a ! -n "$no_notify" ]; then base && sound
-	elif [ -n "$output" -o -n "$output_volume" ]; then base; fi
-    fi
+	if [ -n "$input" ]; then what=source base
+	else
+		what=sink
+		if [ -n "$notify" -a ! -n "$no_notify" ]; then base && sound
+		elif [ -n "$output" -o -n "$output_volume" ]; then base; fi
+	fi
 }
 
 base() {
-    if [ -n "$toggle" ]; then pactl set-$what-mute 0 toggle
-    elif [ -n "$mute" ]; then pactl set-$what-mute 0 1
-    elif [ -n "$unmute" ]; then pactl set-$what-mute 0 0
-    elif [ -n "$volume" ]; then pactl set-$what-volume 0 "$volume%"; fi
+	if [ -n "$toggle" ]; then pactl set-$what-mute 0 toggle
+	elif [ -n "$mute" ]; then pactl set-$what-mute 0 1
+	elif [ -n "$unmute" ]; then pactl set-$what-mute 0 0
+	elif [ -n "$volume" ]; then pactl set-$what-volume 0 "$volume%"; fi
 }
 
 sound() {
-    [ -z $PLAYER ] && PLAYER="mpv"
-    sound=/usr/share/sounds/deepin/stereo/audio-volume-change.wav
-    if [ -f $sound ]; then setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
-    else printf '%s\n' "$(basename $0): sound file not found"; fi
+	[ -z $PLAYER ] && PLAYER="mpv"
+	sound=/usr/share/sounds/deepin/stereo/audio-volume-change.wav
+	if [ -f $sound ]; then setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
+	else printf '%s\n' "$(basename $0): sound file not found"; fi
 }
 
 help() { printf 'Usage:\t%s' "$(basename $0) [options] [arguments]
@@ -43,49 +43,49 @@ Options:
 "; }
 
 parse_opts() {
-    : "${config_dir:=${XDG_CONFIG_HOME:-$HOME/.config}/$(basename $0)}"
-    : "${config_file:=$config_dir/$(basename $0).conf}"
-    [ -f "$config_file" ] && . "$config_file"
+	: "${config_dir:=${XDG_CONFIG_HOME:-$HOME/.config}/$(basename $0)}"
+	: "${config_file:=$config_dir/$(basename $0).conf}"
+	[ -f "$config_file" ] && . "$config_file"
 
-    needs_arg() {
-	if [ -z "$OPTARG" ];then
-	    printf '%s\n' "No arg for --$OPT option" >&2
-	    exit 2
-	fi
-    }
+	needs_arg() {
+		if [ -z "$OPTARG" ];then
+			printf '%s\n' "No arg for --$OPT option" >&2
+			exit 2
+		fi
+	}
 
-    while getopts hniotmuv:-: OPT; do
-	# support long options: https://stackoverflow.com/a/28466267/519360
-	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
-	    OPT="${OPTARG%%=*}"       # extract long option name
-	    OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
-	    OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
-	fi
-	case "$OPT" in
-	    h | help) help ; exit 0 ;;
-	    n | notify) notify=1 ;;
-	    no-notify) no_notify=1 ;;
-	    i | input) input=1 ;;
-	    o | output) output=1 ;;
-	    t | toggle) toggle=1 ;;
-	    m | mute) mute=1 ;;
-	    u | unmute) unmute=1 ; shift ;;
-	    v | volume) needs_arg ; volume=$OPTARG ;;
-	    ??*)
-		printf '%s\n' "Illegal option --$OPT" >&2
-		exit 2
-		;;
-	    ?) exit 2 ;;
-	esac
-    done
-    shift $((OPTIND-1)) # remove parsed options and args from $@ list
+	while getopts hniotmuv:-: OPT; do
+		# support long options: https://stackoverflow.com/a/28466267/519360
+		if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+			OPT="${OPTARG%%=*}"       # extract long option name
+			OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
+			OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+		fi
+		case "$OPT" in
+			h | help) help ; exit 0 ;;
+			n | notify) notify=1 ;;
+			no-notify) no_notify=1 ;;
+			i | input) input=1 ;;
+			o | output) output=1 ;;
+			t | toggle) toggle=1 ;;
+			m | mute) mute=1 ;;
+			u | unmute) unmute=1 ; shift ;;
+			v | volume) needs_arg ; volume=$OPTARG ;;
+			??*)
+				printf '%s\n' "Illegal option --$OPT" >&2
+				exit 2
+				;;
+			?) exit 2 ;;
+		esac
+	done
+	shift $((OPTIND-1)) # remove parsed options and args from $@ list
 
-    if [ $# -ge 1 ]; then
-	if [ $@ -eq $@ ] 2> /dev/null; then
-	    if [ -n "$output" -o -n "$input" ]; then volume=$1
-	    else output=1 volume=$1; fi
+	if [ $# -ge 1 ]; then
+		if [ $@ -eq $@ ] 2> /dev/null; then
+			if [ -n "$output" -o -n "$input" ]; then volume=$1
+			else output=1 volume=$1; fi
+		fi
 	fi
-    fi
 }
 
 main "$@"
