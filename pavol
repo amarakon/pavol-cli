@@ -20,9 +20,14 @@ base() {
 
 sound() {
 	[ -z $PLAYER ] && PLAYER="mpv"
-	sound=/usr/share/sounds/deepin/stereo/audio-volume-change.wav
-	if [ -f $sound ]; then setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
-	else printf '%s\n' "$(basename $0): sound file not found"; fi
+
+	[ ! -d "$sound_directory" ] && sound_directory=/usr/share/sounds/freedesktop/stereo
+	[ ! -d "$sound_directory" ] && sound_directory=/usr/share/sounds/$(ls -t /usr/share/sounds/ | head -1)/stereo
+	sound=$sound_directory/audio-volume-change.*
+
+	if [ -f $sound ]; then
+		setsid $PLAYER --really-quiet --pause=no --keep-open=no $sound &>/dev/null
+	else printf '%s\n' "$(basename $0): sound file not found" >&2; fi
 }
 
 help() { printf 'Usage:\t%s' "$(basename $0) [options] [arguments]
